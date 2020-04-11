@@ -138,7 +138,9 @@ namespace PcCameraApp
                     case "顔認識":
                         using (OpenCVSharpBitmap bitmap = new OpenCVSharpBitmap(img))
                         {
-                            pictureBoxCamera.Image = bitmap.addFaceRect(@"C:\Users\gpbjk\source\repos\Original\cs\opencv\haarcascade_frontalface_default.xml");
+                            string strCurDir = System.Environment.CurrentDirectory;
+                            Debug.WriteLine(strCurDir);
+                            pictureBoxCamera.Image = bitmap.addFaceRect(strCurDir + @"\haarcascade_frontalface_default.xml");
                         }
                         break;
 
