@@ -36,6 +36,11 @@ namespace Original
             return BitmapConverter.ToBitmap(matGray);
         }
 
+        /// <summary>
+        /// 顔を認識して赤枠を追加したBitmapを取得
+        /// </summary>
+        /// <param name="cascadePath"></param>
+        /// <returns></returns>
         public Bitmap addFaceRect(string @cascadePath)
         {
             // 分類機の用意

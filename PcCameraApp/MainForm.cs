@@ -18,20 +18,18 @@ namespace PcCameraApp
 {
     public partial class MainForm : Form
     {
+        // フィールド
+        readonly string[] IMAGE_MODE = { "なし", "グレー", "顔認識" };  // 画像処理モード
+        private string mode;                                            // 現在の画像処理モード
 
-        // 画像処理モード
-        readonly string[] IMAGE_MODE = { "なし", "グレー", "顔認識" };
-        private string mode;    // 現在の画像処理モード
+        public bool DeviceExist = false;                // デバイス有無
+        public FilterInfoCollection videoDevices;       // カメラデバイスの一覧
+        public VideoCaptureDevice videoSource = null;   // カメラデバイスから取得した映像
 
         public MainForm()
         {
             InitializeComponent();
         }
-
-        // フィールド
-        public bool DeviceExist = false;                // デバイス有無
-        public FilterInfoCollection videoDevices;       // カメラデバイスの一覧
-        public VideoCaptureDevice videoSource = null;   // カメラデバイスから取得した映像
 
         // Loadイベント（Formの立ち上げ時に実行）
         private void Form1_Load(object sender, EventArgs e)
@@ -94,6 +92,8 @@ namespace PcCameraApp
 
                     buttonStartStop.Text = "停止";
                     timer1.Enabled = true;
+
+                    Debug.WriteLine("画像処理モード：" + mode);
                 }
                 else
                 {
@@ -118,7 +118,7 @@ namespace PcCameraApp
             Bitmap img = (Bitmap)eventArgs.Frame.Clone();
 
             Debug.WriteLine(DateTime.Now + ":" + "描画更新");
-            Debug.WriteLine(mode);
+            // Debug.WriteLine(mode);
 
             try
             {
@@ -166,6 +166,15 @@ namespace PcCameraApp
         private void timer1_Tick(object sender, EventArgs e)
         {
             labelFps.Text = videoSource.FramesReceived.ToString() + "FPS";
+        }
+        // ソフト終了時のクローズ処理
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Form を閉じる際は映像データ取得をクローズ
+            if (videoSource.IsRunning)
+            {
+                this.CloseVideoSource();
+            }
         }
     }
 }

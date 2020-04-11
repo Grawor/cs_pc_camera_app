@@ -125,6 +125,7 @@
             this.Font = new System.Drawing.Font("メイリオ", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Name = "MainForm";
             this.Text = "PCカメラ映像取得ソフト";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCamera)).EndInit();
             this.ResumeLayout(false);
