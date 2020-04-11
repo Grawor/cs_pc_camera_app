@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -11,13 +12,17 @@ using System.Windows.Forms;
 using AForge.Video;             // AForge.NETライブラリから読込
 using AForge.Video.DirectShow;  // AForge.NETライブラリから読込 
 
-using OpenCvSharp;              // OpenCVSharp
-
+using Original;
 
 namespace PcCameraApp
 {
     public partial class MainForm : Form
     {
+
+        // 画像処理モード
+        readonly string[] IMAGE_MODE = { "なし", "グレー", "顔認識" };
+        private string mode;    // 現在の画像処理モード
+
         public MainForm()
         {
             InitializeComponent();
@@ -31,6 +36,7 @@ namespace PcCameraApp
         // Loadイベント（Formの立ち上げ時に実行）
         private void Form1_Load(object sender, EventArgs e)
         {
+            Debug.WriteLine("Formのロード開始");
             this.getCameraInfo();
         }
 
@@ -41,7 +47,7 @@ namespace PcCameraApp
             {
                 // 端末で認識しているカメラデバイスの一覧を取得
                 videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-                comboBox1.Items.Clear();
+                comboBoxCameraType.Items.Clear();
 
                 if (videoDevices.Count == 0)
                     throw new ApplicationException();
@@ -49,40 +55,49 @@ namespace PcCameraApp
                 foreach (FilterInfo device in videoDevices)
                 {
                     // カメラデバイスの一覧をコンボボックスに追加
-                    comboBox1.Items.Add(device.Name);
-                    comboBox1.SelectedIndex = 0;
+                    comboBoxCameraType.Items.Add(device.Name);
+                    comboBoxCameraType.SelectedIndex = 0;
                     DeviceExist = true;
                 }
             }
             catch (ApplicationException)
             {
                 DeviceExist = false;
-                comboBox1.Items.Add("Deviceが存在していません。");
+                comboBoxCameraType.Items.Add("Deviceが存在していません。");
+            }
+
+            comboBoxMode.Items.Clear();
+
+            // 画像処理モードの追加
+            foreach (string mode in IMAGE_MODE)
+            {
+                comboBoxMode.Items.Add(mode);
             }
         }
 
         // 開始or停止ボタン
         private void button1_Click(object sender, EventArgs e)
         {
-            // MessageBox.Show("ボタンクリック");
+            Debug.WriteLine("ボタンクリック");
+            mode = comboBoxMode.Text;
 
-            if (button1.Text == "開始")
+            if (buttonStartStop.Text == "開始")
             {
 
                 if (DeviceExist)
                 {
-                    videoSource = new VideoCaptureDevice(videoDevices[comboBox1.SelectedIndex].MonikerString);
+                    videoSource = new VideoCaptureDevice(videoDevices[comboBoxCameraType.SelectedIndex].MonikerString);
                     videoSource.NewFrame += new NewFrameEventHandler(videoRendering);
                     this.CloseVideoSource();
 
                     videoSource.Start();
 
-                    button1.Text = "停止";
+                    buttonStartStop.Text = "停止";
                     timer1.Enabled = true;
                 }
                 else
                 {
-                    label1.Text = "デバイスが存在していません。";
+                    labelFps.Text = "デバイスが存在していません。";
                 }
             }
             else
@@ -91,8 +106,8 @@ namespace PcCameraApp
                 {
                     timer1.Enabled = false;
                     this.CloseVideoSource();
-                    label1.Text = "停止中";
-                    button1.Text = "開始";
+                    labelFps.Text = "停止中";
+                    buttonStartStop.Text = "開始";
 
                 }
             }
@@ -101,8 +116,41 @@ namespace PcCameraApp
         private void videoRendering(object sender, NewFrameEventArgs eventArgs)
         {
             Bitmap img = (Bitmap)eventArgs.Frame.Clone();
-            pictureBox1.Image = img;
 
+            Debug.WriteLine(DateTime.Now + ":" + "描画更新");
+            Debug.WriteLine(mode);
+
+            try
+            {
+                switch (mode)
+                {
+                    case "なし":
+                        pictureBoxCamera.Image = img;
+                        break;
+
+                    case "グレー":
+                        using (OpenCVSharpBitmap bitmap = new OpenCVSharpBitmap(img))
+                        {
+                            pictureBoxCamera.Image = bitmap.toGray();
+                        }
+                        break;
+
+                    case "顔認識":
+                        using (OpenCVSharpBitmap bitmap = new OpenCVSharpBitmap(img))
+                        {
+                            pictureBoxCamera.Image = bitmap.addFaceRect(@"C:\Users\gpbjk\source\repos\PcCameraApp\PcCameraApp\haarcascade_frontalface_default.xml");
+                        }
+                        break;
+
+                    default:
+                        pictureBoxCamera.Image = img;
+                        break;
+                }
+            }
+            catch
+            {
+                pictureBoxCamera.Image = img;
+            }
         }
         // 停止の初期化
         private void CloseVideoSource()
@@ -117,7 +165,7 @@ namespace PcCameraApp
         // フレームレートの取得
         private void timer1_Tick(object sender, EventArgs e)
         {
-            label1.Text = videoSource.FramesReceived.ToString() + "FPS";
+            labelFps.Text = videoSource.FramesReceived.ToString() + "FPS";
         }
     }
 }
