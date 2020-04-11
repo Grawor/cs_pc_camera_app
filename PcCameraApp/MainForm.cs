@@ -138,7 +138,7 @@ namespace PcCameraApp
                     case "顔認識":
                         using (OpenCVSharpBitmap bitmap = new OpenCVSharpBitmap(img))
                         {
-                            pictureBoxCamera.Image = bitmap.addFaceRect(@"C:\Users\gpbjk\source\repos\PcCameraApp\PcCameraApp\haarcascade_frontalface_default.xml");
+                            pictureBoxCamera.Image = bitmap.addFaceRect(@"C:\Users\gpbjk\source\repos\Original\cs\opencv\haarcascade_frontalface_default.xml");
                         }
                         break;
 
@@ -170,10 +170,13 @@ namespace PcCameraApp
         // ソフト終了時のクローズ処理
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Form を閉じる際は映像データ取得をクローズ
-            if (videoSource.IsRunning)
+            if (videoSource != null)
             {
-                this.CloseVideoSource();
+                // Form を閉じる際は映像データ取得をクローズ
+                if (videoSource.IsRunning)
+                {
+                    this.CloseVideoSource();
+                }
             }
         }
     }
